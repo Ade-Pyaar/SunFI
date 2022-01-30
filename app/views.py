@@ -1,6 +1,7 @@
 #inbulit libraries
 import json
-from urllib3 import PoolManager
+import requests
+from decouple import config
 
 #django imports
 from django.contrib.auth import authenticate
@@ -17,10 +18,10 @@ from .authentication import get_access_token, MyAuthentication
 from .models import JWT, Profile
 
 
+
 #setting the base url and the authorization header
 BASE_URL = "https://the-one-api.dev/v2"
-LOGIN = {"Authorization": f"Bearer Y_oLfN5iBFQM8b6Y5Vg2"}
-http_request = PoolManager()
+LOGIN = {"Authorization": f"Bearer {config('THE_ONE_API_KEY')}"}
 
 
 #homepage endpoint
@@ -120,9 +121,9 @@ def characters(request):
 
     url = BASE_URL + "/character"
 
-    result = http_request.request('GET', url, headers=LOGIN)
+    result = requests.get(url, headers=LOGIN)
 
-    result_dict = json.loads(result.data)
+    result_dict = json.loads(result.text)
     context['result'] = result_dict['docs']
 
 
@@ -139,9 +140,9 @@ def characters_quotes(request, xter_id):
     context = {}
 
     url = BASE_URL + f"/character/{xter_id}/quote"
-    result = http_request.request('GET', url, headers=LOGIN)
+    result = requests.get(url, headers=LOGIN)
 
-    context['result'] = json.loads(result.data)
+    context['result'] = json.loads(result.text)
 
     return Response(context, status=status.HTTP_200_OK)
 
@@ -156,8 +157,8 @@ def character_fav(request, xter_id):
     context = {}
     url = BASE_URL + f"/character/{xter_id}"
 
-    single_xter = http_request.request('GET', url, headers=LOGIN)
-    xter_dict = json.loads(single_xter.data)
+    single_xter = requests.get(url, headers=LOGIN)
+    xter_dict = json.loads(single_xter.text)
 
     profile = Profile.objects.get(user=request.user)
     profile.fav_xter[xter_id] = {
@@ -183,8 +184,8 @@ def character_quotes_fav(request, xter_id, quote_id):
 
     url = BASE_URL + f"/character/{xter_id}/quote"
 
-    xter_quotes = http_request.request('GET', url, headers=LOGIN)
-    quotes_dict = json.loads(xter_quotes.data)
+    xter_quotes = requests.get(url, headers=LOGIN)
+    quotes_dict = json.loads(xter_quotes.text)
     seen = False
 
     for quote in quotes_dict['docs']:
